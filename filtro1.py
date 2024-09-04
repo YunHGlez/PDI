@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageOps
+import numpy as np
 
 class ImageEditor:
     def __init__(self, root):
@@ -30,16 +31,19 @@ class ImageEditor:
         self.upload_button = tk.Button(self.button_frame, text="Cargar Imagen", command=self.load_image)
         self.upload_button.pack(side=tk.LEFT, padx=5)
 
-        self.bw_button = tk.Button(self.button_frame, text="Blanco y Negro", command=self.apply_bw)
-        self.bw_button.pack(side=tk.LEFT, padx=5)
+        self.red_button = tk.Button(self.button_frame, text="Filtro Rojo", command=self.apply_red_filter)
+        self.red_button.pack(side=tk.LEFT, padx=5)
 
-        self.color_tint_button = tk.Button(self.button_frame, text="Aplicar Mica de Color", command=self.apply_color_tint)
-        self.color_tint_button.pack(side=tk.LEFT, padx=5)
+        self.green_button = tk.Button(self.button_frame, text="Filtro Verde", command=self.apply_green_filter)
+        self.green_button.pack(side=tk.LEFT, padx=5)
+
+        self.blue_button = tk.Button(self.button_frame, text="Filtro Azul", command=self.apply_blue_filter)
+        self.blue_button.pack(side=tk.LEFT, padx=5)
 
     def load_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
-            self.original_image = Image.open(file_path)
+            self.original_image = Image.open(file_path).convert('RGB')
             self.original_image = self.resize_image(self.original_image, self.image_size)
             self.show_image(self.original_image, self.original_canvas)
             self.modified_image = self.original_image
@@ -54,16 +58,41 @@ class ImageEditor:
         canvas.config(image=tk_image)
         canvas.image = tk_image
 
-    def apply_bw(self):
+    def apply_red_filter(self):
         if hasattr(self, 'original_image'):
-            self.modified_image = ImageOps.grayscale(self.original_image)
+            modified_array = np.array(self.original_image)
+            modified_array = self.red(modified_array)
+            self.modified_image = Image.fromarray(modified_array)
             self.show_image(self.modified_image, self.modified_canvas)
 
-    def apply_color_tint(self):
+    def apply_green_filter(self):
         if hasattr(self, 'original_image'):
-            # Aquí puedes cambiar el color de la mica
-            self.modified_image = ImageOps.colorize(ImageOps.grayscale(self.original_image), black="black", white="blue")
+            modified_array = np.array(self.original_image)
+            modified_array = self.green(modified_array)
+            self.modified_image = Image.fromarray(modified_array)
             self.show_image(self.modified_image, self.modified_canvas)
+
+    def apply_blue_filter(self):
+        if hasattr(self, 'original_image'):
+            modified_array = np.array(self.original_image)
+            modified_array = self.blue(modified_array)
+            self.modified_image = Image.fromarray(modified_array)
+            self.show_image(self.modified_image, self.modified_canvas)
+
+    def red(self, imagen):
+        imagen[:, :, 1] = 0  # Elimina el canal verde
+        imagen[:, :, 2] = 0  # Elimina el canal azul
+        return imagen
+
+    def green(self, imagen):
+        imagen[:, :, 0] = 0  # Elimina el canal rojo
+        imagen[:, :, 2] = 0  # Elimina el canal azul
+        return imagen
+
+    def blue(self, imagen):
+        imagen[:, :, 0] = 0  # Elimina el canal rojo
+        imagen[:, :, 1] = 0  # Elimina el canal verde
+        return imagen
 
 if __name__ == "__main__":
     root = tk.Tk()
